@@ -152,7 +152,7 @@ public class DatabaseManager {
     public static Connection getConnection() throws SQLException {
         // Verificar que existe una conexión
         if (conexionActiva == null) {
-            throw new SQLException("No hay conexión activa. Debe conectar primero (Opción 1 del menú)");
+            throw new SQLException("No hay conexión activa");
         }
 
         // Verificar que no está cerrada

@@ -224,7 +224,7 @@ public class DatabaseInitializer {
                 }
             }
 
-            System.out.println("✓ Procedimiento almacenado creado correctamente");
+            System.out.println("Procedimiento almacenado creado correctamente");
         }
     }
 

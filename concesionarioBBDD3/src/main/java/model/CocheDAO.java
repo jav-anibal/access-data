@@ -119,11 +119,11 @@ public class CocheDAO {
             br.close();
             pstmt.close();
 
-            // Si llegamos aquí, todo fue bien → COMMIT
+            // Si llegamos aquí, t-do fue bien → COMMIT
             con.commit();
             con.setAutoCommit(true);
 
-            System.out.println("✓ Se importaron " + contador + " coches correctamente");
+            System.out.println("Se importaron " + contador + " coches correctamente");
             return true;
 
         } catch (FileNotFoundException e) {

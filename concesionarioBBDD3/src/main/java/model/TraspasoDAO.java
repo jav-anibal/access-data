@@ -159,7 +159,7 @@ public class TraspasoDAO {
             con.commit();
             con.setAutoCommit(true);
 
-            System.out.println("✓ Traspaso realizado correctamente");
+            System.out.println("Traspaso realizado correctamente");
             if (idVendedor == null) {
                 System.out.println("  - Venta del concesionario al cliente con DNI: " + dniComprador);
             } else {
