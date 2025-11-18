@@ -265,6 +265,120 @@ public class CocheDAO {
         }
     }
 
+
+
+
+
+
+    /**
+     * Modifica los datos de un coche existente (excepto la matrícula)
+     * @param con Conexión activa
+     * @param matricula Matrícula del coche a modificar
+     * @param marca Nueva marca
+     * @param modelo Nuevo modelo
+     * @param extras Nuevos extras
+     * @param precio Nuevo precio
+     * @return true si se modificó correctamente, false si no existe o hubo error
+     */
+    public static boolean modificarCoche(Connection con, String matricula, String marca,
+                                         String modelo, String extras, double precio) {
+
+        String sql = "UPDATE coches SET marca = ?, modelo = ?, extras = ?, precio = ? WHERE matricula = ?";
+
+        try (PreparedStatement pstmt = con.prepareStatement(sql)) {
+
+            // Asignar valores a los parámetros
+            pstmt.setString(1, marca);
+            pstmt.setString(2, modelo);
+            pstmt.setString(3, extras);
+            pstmt.setDouble(4, precio);
+            pstmt.setString(5, matricula);
+
+            // Ejecutar UPDATE
+            int filasAfectadas = pstmt.executeUpdate();
+
+            // Si filasAfectadas = 0, significa que no existe un coche con esa matrícula
+            if (filasAfectadas == 0) {
+                System.err.println("No existe ningún coche con la matrícula: " + matricula);
+                return false;
+            }
+
+            return true;
+
+        } catch (SQLException e) {
+            System.err.println("Error SQL al modificar coche: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Busca y muestra los datos actuales de un coche por matrícula
+     * @param con Conexión activa
+     * @param matricula Matrícula del coche a buscar
+     * @return true si existe, false si no existe
+     */
+    public static boolean mostrarCoche(Connection con, String matricula) {
+        String sql = "SELECT matricula, marca, modelo, extras, precio FROM coches WHERE matricula = ?";
+
+        try (PreparedStatement pstmt = con.prepareStatement(sql)) {
+            pstmt.setString(1, matricula);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    System.out.println("\n--- DATOS ACTUALES ---");
+                    System.out.println("Matrícula: " + rs.getString("matricula"));
+                    System.out.println("Marca: " + rs.getString("marca"));
+                    System.out.println("Modelo: " + rs.getString("modelo"));
+                    System.out.println("Extras: " + rs.getString("extras"));
+                    System.out.println("Precio: " + rs.getDouble("precio") + "€");
+                    System.out.println("----------------------\n");
+                    return true;
+                } else {
+                    System.err.println("No existe ningún coche con la matrícula: " + matricula);
+                    return false;
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error al buscar coche: " + e.getMessage());
+            return false;
+        }
+    }
+
+
+
+    /**
+     * Elimina un coche de la base de datos
+     * @param con Conexión activa
+     * @param matricula Matrícula del coche a eliminar
+     * @return true si se eliminó correctamente, false si no existe o hubo error
+     */
+    public static boolean borrarCoche(Connection con, String matricula) {
+
+        String sql = "DELETE FROM coches WHERE matricula = ?";
+
+        try (PreparedStatement pstmt = con.prepareStatement(sql)) {
+
+            // Asignar matrícula al parámetro
+            pstmt.setString(1, matricula);
+
+            // Ejecutar DELETE
+            int filasAfectadas = pstmt.executeUpdate();
+
+            // Si filasAfectadas = 0, significa que no existe un coche con esa matrícula
+            if (filasAfectadas == 0) {
+                System.err.println("No existe ningún coche con la matrícula: " + matricula);
+                return false;
+            }
+
+            return true;
+
+        } catch (SQLException e) {
+            System.err.println("Error SQL al borrar coche: " + e.getMessage());
+            return false;
+        }
+    }
+
 }
 
 

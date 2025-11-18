@@ -2,9 +2,9 @@ package util;
 
 import database.DatabaseManager;
 import database.DatabaseInitializer;
-import model.CocheDAO;
-import model.PropietarioDAO;
+import model.*;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Scanner;
@@ -27,8 +27,9 @@ public class MenuPrincipal {
         System.out.println("8)  Modificar Coche");
         System.out.println("9)  Borrar Coche");
         System.out.println("10) Realizar Traspaso");
-        System.out.println("11) Ejecutar Procedimiento Almacenado");
-        System.out.println("12) Generar Informe Resumen");
+        System.out.println("11) Crear Procedimiento");
+        System.out.println("12) Ejecutar Procedimiento Almacenado");
+        System.out.println("13) Generar Informe Resumen");
         System.out.println("0)  Salir");
         System.out.print("Elija una opción: ");
     }
@@ -54,11 +55,13 @@ public class MenuPrincipal {
                 case 5 -> opcionImportarCochesCSV();
                 case 6 -> opcionListarCochesConcesionario();
                 case 7 -> opcionListarCochesPropietarios();
-                case 8 -> System.out.println(" Opción 8 - Pendiente de implementar");
-                case 9 -> System.out.println(" Opción 9 - Pendiente de implementar");
-                case 10 -> System.out.println(" Opción 10 - Pendiente de implementar");
-                case 11 -> System.out.println(" Opción 11 - Pendiente de implementar");
-                case 12 -> System.out.println(" Opción 12 - Pendiente de implementar");
+                case 8 -> opcionModificarCoche();
+                case 9 -> opcionBorrarCoche();
+                case 10 -> opcionRealizarTraspaso();
+                case 11 -> opcionCrearProcedimiento();
+                case 12 -> opcionEjecutarProcedimiento();
+                case 13 -> opcionGenerarInforme();
+
                 case 0 -> {
                     System.out.println("\n→ Cerrando conexión a la base de datos...");
                     DatabaseManager.cerrarConexion();
@@ -322,6 +325,252 @@ public class MenuPrincipal {
 
         } catch (SQLException e) {
             System.err.println("Error al listar coches: " + e.getMessage());
+        }
+    }
+
+
+
+    /**
+     * Opción 8: Modificar los datos de un coche existente
+     */
+    private void opcionModificarCoche() {
+        if (!DatabaseManager.isConectado()) {
+            System.err.println("No hay conexión activa.");
+            System.err.println("Primero debe conectar (Opción 1)");
+            return;
+        }
+
+        try {
+            System.out.println("\n=== MODIFICAR COCHE ===");
+
+            System.out.print("Matrícula del coche a modificar: ");
+            String matricula = sc.nextLine().trim();
+
+            Connection con = DatabaseManager.getConnection();
+
+            // Mostrar datos actuales del coche
+            if (!CocheDAO.mostrarCoche(con, matricula)) {
+                return; // Si no existe, salir
+            }
+
+            // Pedir nuevos datos
+            System.out.println("Introduce los nuevos datos:");
+
+            System.out.print("Nueva Marca: ");
+            String marca = sc.nextLine().trim();
+
+            System.out.print("Nuevo Modelo: ");
+            String modelo = sc.nextLine().trim();
+
+            System.out.print("Nuevos Extras (separados por |): ");
+            String extras = sc.nextLine().trim();
+
+            System.out.print("Nuevo Precio: ");
+            double precio = Double.parseDouble(sc.nextLine().trim());
+
+            // Confirmar modificación
+            System.out.print("\n¿Confirmar modificación? (S/N): ");
+            String confirmacion = sc.nextLine().trim().toUpperCase();
+
+            if (!confirmacion.equals("S")) {
+                System.out.println("Modificación cancelada");
+                return;
+            }
+
+            // Ejecutar modificación
+            boolean exito = CocheDAO.modificarCoche(con, matricula, marca, modelo, extras, precio);
+
+            if (exito) {
+                System.out.println("✓ Coche modificado correctamente");
+            } else {
+                System.err.println("✗ No se pudo modificar el coche");
+            }
+
+        } catch (NumberFormatException e) {
+            System.err.println("Error: El precio debe ser un número válido");
+        } catch (SQLException e) {
+            System.err.println("Error al modificar coche: " + e.getMessage());
+        }
+    }
+
+
+
+    /**
+     * Opción 9: Borrar un coche de la base de datos
+     */
+    private void opcionBorrarCoche() {
+        if (!DatabaseManager.isConectado()) {
+            System.err.println("No hay conexión activa.");
+            System.err.println("Primero debe conectar (Opción 1)");
+            return;
+        }
+
+        try {
+            System.out.println("\n=== BORRAR COCHE ===");
+
+            System.out.print("Matrícula del coche a borrar: ");
+            String matricula = sc.nextLine().trim();
+
+            Connection con = DatabaseManager.getConnection();
+
+            // Mostrar datos del coche antes de borrar
+            if (!CocheDAO.mostrarCoche(con, matricula)) {
+                return; // Si no existe, salir
+            }
+
+            // Confirmar eliminación
+            System.out.print("\n⚠️  ¿Está seguro de que desea eliminar este coche? (S/N): ");
+            String confirmacion = sc.nextLine().trim().toUpperCase();
+
+            if (!confirmacion.equals("S")) {
+                System.out.println("Operación cancelada");
+                return;
+            }
+
+            // Ejecutar eliminación
+            boolean exito = CocheDAO.borrarCoche(con, matricula);
+
+            if (exito) {
+                System.out.println("✓ Coche eliminado correctamente");
+            } else {
+                System.err.println("✗ No se pudo eliminar el coche");
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error al borrar coche: " + e.getMessage());
+        }
+    }
+
+
+
+    /**
+     * Opción 10: Realizar un traspaso (venta de coche)
+     */
+    private void opcionRealizarTraspaso() {
+        if (!DatabaseManager.isConectado()) {
+            System.err.println("No hay conexión activa.");
+            System.err.println("Primero debe conectar (Opción 1)");
+            return;
+        }
+
+        try {
+            System.out.println("\n=== REALIZAR TRASPASO ===");
+
+            System.out.print("DNI del comprador: ");
+            String dniComprador = sc.nextLine().trim();
+
+            System.out.print("Matrícula del coche: ");
+            String matriculaCoche = sc.nextLine().trim();
+
+            System.out.print("Monto económico de la transacción: ");
+            double montoEconomico = Double.parseDouble(sc.nextLine().trim());
+
+            // Confirmar operación
+            System.out.print("\n¿Confirmar traspaso? (S/N): ");
+            String confirmacion = sc.nextLine().trim().toUpperCase();
+
+            if (!confirmacion.equals("S")) {
+                System.out.println("Traspaso cancelado");
+                return;
+            }
+
+            // Obtener conexión y realizar traspaso
+            Connection con = DatabaseManager.getConnection();
+            boolean exito = TraspasoDAO.realizarTraspaso(con, dniComprador, matriculaCoche, montoEconomico);
+
+            if (!exito) {
+                System.err.println("✗ El traspaso no se completó (ROLLBACK)");
+            }
+
+        } catch (NumberFormatException e) {
+            System.err.println("Error: El monto debe ser un número válido");
+        } catch (SQLException e) {
+            System.err.println("Error al realizar traspaso: " + e.getMessage());
+        }
+    }
+
+
+
+
+
+    //(11)
+
+
+    /**
+     * Opción 11: Ejecutar procedimiento almacenado (solo MySQL)
+     */
+    private void opcionEjecutarProcedimiento() {
+        if (!DatabaseManager.isConectado()) {
+            System.err.println("No hay conexión activa.");
+            System.err.println("Primero debe conectar (Opción 1)");
+            return;
+        }
+
+        try {
+            Connection con = DatabaseManager.getConnection();
+            ProcedimientoDAO.ejecutarCochesPorMarca(con);
+
+        } catch (SQLException e) {
+            System.err.println("Error al ejecutar procedimiento: " + e.getMessage());
+        }
+    }
+
+
+
+
+
+    /**
+     * Opción para crear el procedimiento almacenado (solo MySQL)
+     */
+    private void opcionCrearProcedimiento() {
+        if (!DatabaseManager.isConectado()) {
+            System.err.println("No hay conexión activa.");
+            System.err.println("Primero debe conectar (Opción 1)");
+            return;
+        }
+
+        try {
+            Connection conexion = DatabaseManager.getConnection();
+            DatabaseInitializer.crearProcedimientoAlmacenado(conexion);
+
+        } catch (SQLException | IOException e) {
+            System.err.println("Error al crear procedimiento: " + e.getMessage());
+        }
+    }
+
+
+
+    /**
+     * Opción 13: Generar informe resumen en archivo de texto
+     */
+    private void opcionGenerarInforme() {
+        if (!DatabaseManager.isConectado()) {
+            System.err.println("No hay conexión activa.");
+            System.err.println("Primero debe conectar (Opción 1)");
+            return;
+        }
+
+        try {
+            System.out.println("\n=== GENERAR INFORME RESUMEN ===");
+
+            System.out.print("Ruta del archivo (ejemplo: informe_concesionario.txt): ");
+            String rutaArchivo = sc.nextLine().trim();
+
+            // Si está vacío, usar nombre por defecto
+            if (rutaArchivo.isEmpty()) {
+                rutaArchivo = "informe_concesionario.txt";
+                System.out.println("Usando nombre por defecto: " + rutaArchivo);
+            }
+
+            Connection con = DatabaseManager.getConnection();
+            boolean exito = InformeDAO.generarInformeResumen(con, rutaArchivo);
+
+            if (!exito) {
+                System.err.println("✗ No se pudo generar el informe");
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error al generar informe: " + e.getMessage());
         }
     }
 }

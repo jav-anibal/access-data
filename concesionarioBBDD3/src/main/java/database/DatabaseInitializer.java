@@ -182,6 +182,52 @@ public class DatabaseInitializer {
 
         return resultado.toString().trim();
     }
+
+
+    //(11)
+
+    /**
+     * Crea el procedimiento almacenado en MySQL
+     * Solo funciona con MySQL, SQLite no soporta procedimientos almacenados
+     * @param con Conexión activa
+     * @throws SQLException Si hay error SQL
+     * @throws IOException Si no se encuentra el archivo
+     */
+    public static void crearProcedimientoAlmacenado(Connection con) throws SQLException, IOException {
+
+        TipoMotor tipo = detectarTipoMotor(con);
+
+        if (tipo != TipoMotor.MYSQL) {
+            System.out.println("Los procedimientos almacenados solo están disponibles en MySQL");
+            return;
+        }
+
+        String nombreArchivo = "schema-procedures.sql";
+        String scriptSQL = leerArchivoDDL(nombreArchivo);
+
+        // Para procedimientos, ejecutamos el script completo sin dividir por ;
+        // porque el procedimiento contiene múltiples ;
+        try (Statement stmt = con.createStatement()) {
+            // Dividir por DELIMITER para ejecutar cada sección
+            String[] bloques = scriptSQL.split("DELIMITER");
+
+            for (String bloque : bloques) {
+                bloque = bloque.trim();
+                if (!bloque.isEmpty() && !bloque.equals("//") && !bloque.equals(";")) {
+                    // Eliminar el delimitador temporal //
+                    bloque = bloque.replace("//", "");
+                    bloque = bloque.trim();
+
+                    if (!bloque.isEmpty()) {
+                        stmt.execute(bloque);
+                    }
+                }
+            }
+
+            System.out.println("✓ Procedimiento almacenado creado correctamente");
+        }
+    }
+
 }
 
 
